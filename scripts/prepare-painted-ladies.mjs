@@ -1,0 +1,12 @@
+import { fromUrl } from 'geotiff';
+import { writeFile } from 'node:fs/promises';
+const url = 'https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N36W123_Map.tif';
+const bbox = [-122.4384,37.7738,-122.4315,37.778];
+const width = 64, height = 50;
+console.log('Reading a small Painted Ladies / Alamo Square window from the public ESA WorldCover COG…');
+const tiff = await fromUrl(url);
+const raster = await tiff.readRasters({bbox,width,height,interleave:true,resampleMethod:'nearest'});
+const counts = {};
+for (const n of raster) counts[n] = (counts[n] || 0) + 1;
+await writeFile('src/data/painted-ladies-landcover.json', JSON.stringify({width,height,bbox,year:2021,source:'ESA WorldCover 2021 v200',url,method:'Nearest-neighbor representative samples from the COG overview; simplified display cells, not parcel classifications.',attribution:'© ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium',license:'CC BY 4.0',classes:Array.from(raster)},null,2));
+console.log('Saved real land-cover samples:',counts);

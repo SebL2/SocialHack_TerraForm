@@ -1,0 +1,8 @@
+import {describe,it,expect} from 'vitest';
+import {createRuntimeProgress,type GlobalRunProgress} from './runtimeProgress';
+const progress:GlobalRunProgress={selected:23,plan:[{patch:23,choice:1}],choice:1,values:[29,24,48],season:3,running:true,explanation:null,guide:false,notice:'A run in progress'};
+describe('current app run progress',()=>{
+ it('restores each location independently, including an unfinished simulation',()=>{const run=createRuntimeProgress();run.saveLevel('senegal',progress);run.saveLevel('mongolia',{...progress,season:0,running:false,plan:[{patch:8,choice:2}]});expect(run.loadLevel('senegal')).toEqual(progress);expect(run.loadLevel('mongolia')?.plan).toEqual([{patch:8,choice:2}]);expect(run.hasLevel('senegal')).toBe(true);});
+ it('keeps stored snapshots separate from mutable component state',()=>{const run=createRuntimeProgress();const input=structuredClone(progress);run.saveLevel('senegal',input);input.plan.length=0;input.values[0]=0;const loaded=run.loadLevel('senegal')!;expect(loaded.plan).toHaveLength(1);loaded.plan.length=0;expect(run.loadLevel('senegal')?.plan).toHaveLength(1);});
+ it('keeps unlocks and tutorial completion in the current run only',()=>{const first=createRuntimeProgress();first.unlock(2);first.unlock(1);first.tutorialComplete=true;first.sfStarted=true;first.sfWasRunning=true;first.saveLevel('senegal',progress);expect(first.unlocked).toBe(2);expect(first.hasLevel('sf')).toBe(true);const fresh=createRuntimeProgress();expect(fresh.unlocked).toBe(0);expect(fresh.tutorialComplete).toBe(false);expect(fresh.sfStarted).toBe(false);expect(fresh.sfWasRunning).toBe(false);expect(fresh.loadLevel('senegal')).toBeUndefined();});
+});

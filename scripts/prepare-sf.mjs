@@ -1,0 +1,12 @@
+import { fromUrl } from 'geotiff';
+import { writeFile } from 'node:fs/promises';
+const url = 'https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N36W123_Map.tif';
+const bbox = [-122.53,37.705,-122.345,37.835];
+const width = 64, height = 56;
+console.log('Reading a small San Francisco window from the public ESA WorldCover COG…');
+const tiff = await fromUrl(url);
+const raster = await tiff.readRasters({bbox,width,height,interleave:true,resampleMethod:'nearest'});
+const counts = {};
+for (const n of raster) counts[n] = (counts[n] || 0) + 1;
+await writeFile('src/data/sf-landcover.json', JSON.stringify({width,height,bbox,year:2021,source:'ESA WorldCover 2021 v200',url,method:'Nearest-neighbor representative samples from the COG overview; simplified display cells, not parcel classifications.',attribution:'© ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium',license:'CC BY 4.0',classes:Array.from(raster)},null,2));
+console.log('Saved real land-cover samples:',counts);

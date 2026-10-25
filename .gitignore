@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+
+.cache/
+
+.env.local
+.env.*.local
+
+# Local QA output and TypeScript build cache
+artifacts/
+*.tsbuildinfo

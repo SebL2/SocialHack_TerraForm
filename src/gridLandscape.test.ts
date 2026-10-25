@@ -1,0 +1,9 @@
+import {describe,it,expect} from 'vitest';
+import {createGame,cellLocation,type Action} from './simulation';
+import {mapToGrid,gridToMap,tileAtGrid,mappedBuildings,gridPatch,patchPoint,pathShape,roadShape} from './gridLandscape';
+describe('real Alamo Square geometry in the original grid',()=>{
+ it('round-trips each geographic cell center without changing its selection ID',()=>{for(const c of createGame().cells){const p=cellLocation(c),q=mapToGrid(p.lng,p.lat),r=gridToMap(q.x,q.y);expect(q.x).toBeCloseTo(c.x+.5,8);expect(q.y).toBeCloseTo(c.y+.5,8);expect(tileAtGrid(q.x,q.y)).toBe(c.id);expect(r.lng).toBeCloseTo(p.lng,10);expect(r.lat).toBeCloseTo(p.lat,10);}});
+ it('keeps all seven Painted Ladies at distinct real footprints, not snapped tile symbols',()=>{const houses=mappedBuildings.filter(b=>b.special);expect(houses).toHaveLength(7);expect(new Set(houses.map(b=>b.address)).size).toBe(7);expect(houses.some(b=>b.shapes[0][0].some(p=>Math.abs(p[0]-Math.round(p[0]))>.01))).toBe(true);});
+ it('keeps mapped paths and Steiner Street inside the grid',()=>{for(const shape of [...pathShape,...roadShape])for(const ring of shape)for(const p of ring){expect(p[0]).toBeGreaterThanOrEqual(-1e-9);expect(p[0]).toBeLessThanOrEqual(12+1e-9);expect(p[1]).toBeGreaterThanOrEqual(-1e-9);expect(p[1]).toBeLessThanOrEqual(12+1e-9);}});
+ it('clips every intervention shape to its selected tile and anchors its object in that same tile',()=>{for(const c of createGame().cells)for(const action of ['restore','housing','retrofit','protect'] as Action[]){const shapes=gridPatch(c,action);for(const polygon of shapes)for(const ring of polygon)for(const [x,y]of ring){expect(x).toBeGreaterThanOrEqual(c.x-1e-9);expect(x).toBeLessThanOrEqual(c.x+1+1e-9);expect(y).toBeGreaterThanOrEqual(c.y-1e-9);expect(y).toBeLessThanOrEqual(c.y+1+1e-9);}const p=patchPoint(c,action);if(p)expect(tileAtGrid(p.x,p.y)).toBe(c.id);}});
+});

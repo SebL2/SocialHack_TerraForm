@@ -1,0 +1,8 @@
+import {describe,it,expect} from 'vitest';
+import {environmentTileDetails} from './environmentTileDetails';
+import {createGame} from './simulation';
+import type {EnvironmentRun} from './environmentHistory';
+describe('environment tile development information',()=>{
+ it('shows construction timing, then tree age and condition from the selected snapshot',()=>{const before=createGame(),building=structuredClone(before),grown=structuredClone(before);building.cells[0].project={action:'restore',remaining:3,startsIn:6};grown.cells[0].intervention='restore';grown.cells[0].project=null;grown.cells[0].age=9;grown.cells[0].condition=.8;const run:EnvironmentRun={kind:'sf',location:'SF',rain:35,before,steps:[building,grown]};expect(environmentTileDetails(run,0,0)?.status).toContain('starts in 6 months');expect(environmentTileDetails(run,1,0)?.status).toContain('9 months old');expect(environmentTileDetails(run,1,0)?.detail).toContain('80%');expect(environmentTileDetails(run,1,1)).toBeNull();expect(environmentTileDetails(run,0,144)).toBeNull();});
+ it('identifies an earlier global intervention separately from one added in this run',()=>{const run:EnvironmentRun={kind:'global',location:'Senegal',site:'senegal',before:{month:36,plan:[{patch:1,choice:0}],values:[30,30,40],budget:70},steps:[{month:48,plan:[{patch:1,choice:0},{patch:2,choice:1}],values:[40,50,45],budget:52}]};expect(environmentTileDetails(run,0,1)?.status).toContain('earlier run');expect(environmentTileDetails(run,0,2)?.status).toContain('Added this run');expect(environmentTileDetails(run,0,2)?.status).toContain('year 4');expect(environmentTileDetails(run,0,3)).toBeNull();});
+});
